@@ -91,7 +91,7 @@ abstract class HtmlDomExpression
     /// Process the interpretation of the Html node to its Word OpenXml equivalence.
     /// </summary>
     /// <param name="context">The parsing context.</param>
-    public abstract IEnumerable<OpenXmlElement> Interpret (ParsingContext context);
+    public abstract IEnumerable<OpenXmlElement> Interpret(ParsingContext context);
 
     /// <summary>
     /// Create a new interpreter for the given html tag.

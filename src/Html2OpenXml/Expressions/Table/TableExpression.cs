@@ -182,8 +182,11 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
                 break;
             case UnitMetric.Point:
             case UnitMetric.Pixel:
-                tableProperties.TableWidth = new() { Type = TableWidthUnitValues.Dxa, 
-                    Width = width.ValueInDxa.ToString(CultureInfo.InvariantCulture) };
+                tableProperties.TableWidth = new()
+                {
+                    Type = TableWidthUnitValues.Dxa,
+                    Width = width.ValueInDxa.ToString(CultureInfo.InvariantCulture)
+                };
                 break;
             case UnitMetric.Auto:
                 tableProperties.TableWidth = new() { Width = "0", Type = TableWidthUnitValues.Auto };
