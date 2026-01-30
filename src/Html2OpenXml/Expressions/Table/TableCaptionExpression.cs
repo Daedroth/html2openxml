@@ -22,8 +22,6 @@ namespace HtmlToOpenXml.Expressions;
 /// </summary>
 sealed class TableCaptionExpression(Table table, IHtmlElement node) : PhrasingElementExpression(node)
 {
-    private readonly Table table = table;
-
     /// <inheritdoc/>
     public override IEnumerable<OpenXmlElement> Interpret (ParsingContext context)
     {

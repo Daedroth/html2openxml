@@ -1,14 +1,15 @@
 ﻿/* Copyright (C) Olivier Nizet https://github.com/onizet/html2openxml - All Rights Reserved
- * 
+ *
  * This source is subject to the Microsoft Permissive License.
  * Please see the License.txt file for more information.
  * All other rights reserved.
- * 
- * THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY 
+ *
+ * THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
  * KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
  * PARTICULAR PURPOSE.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -26,6 +27,7 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
 {
     /// <summary>MS Word has this hard-limit.</summary>
     internal const int MaxColumns = short.MaxValue;
+
     private readonly IHtmlTableElement tableNode = node;
     private readonly Table table = new();
     private readonly TableProperties tableProperties = new();
@@ -89,7 +91,7 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
         colgroup ??= tableNode;
 
         foreach (var col in colgroup.Children
-            .Where(n => n.LocalName == "col").Cast<IHtmlTableColumnElement>())
+                     .Where(n => n.LocalName == "col").Cast<IHtmlTableColumnElement>())
         {
             var expression = new TableColExpression(col);
             foreach (var child in expression.Interpret(context).Cast<GridColumn>())
@@ -99,7 +101,7 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
             }
         }
 
-        for (int c = columns.Count; c < columnCount ; c++)
+        for (int c = columns.Count; c < columnCount; c++)
         {
             columns.Add(new GridColumn());
         }
@@ -139,12 +141,12 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
     private static int GuessColumnsCount(IHtmlTableElement tableNode)
     {
         int columnCount = 0;
-        foreach(var part in tableNode.AsTablePartEnumerable())
+        foreach (var part in tableNode.AsTablePartEnumerable())
         {
             var rowNodes = part.Rows;
             var rows = new int[rowNodes.Length];
 
-            for(int i = 0; i < rows.Length; i++)
+            for (int i = 0; i < rows.Length; i++)
             {
                 foreach (var cell in rowNodes.ElementAt(i).Cells)
                 {
@@ -163,9 +165,10 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
         return Math.Min(columnCount, MaxColumns);
     }
 
-    protected override void ComposeStyles (ParsingContext context)
+    protected override void ComposeStyles(ParsingContext context)
     {
-        tableProperties.TableStyle = context.DocumentStyle.GetTableStyle(context.DocumentStyle.DefaultStyles.TableStyle);
+        tableProperties.TableStyle =
+            context.DocumentStyle.GetTableStyle(context.DocumentStyle.DefaultStyles.TableStyle);
 
         styleAttributes = tableNode.GetStyles();
         var width = styleAttributes.GetUnit("width", UnitMetric.Pixel);
@@ -183,8 +186,11 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
                 break;
             case UnitMetric.Point:
             case UnitMetric.Pixel:
-                tableProperties.TableWidth = new() { Type = TableWidthUnitValues.Dxa, 
-                    Width = width.ValueInDxa.ToString(CultureInfo.InvariantCulture) };
+                tableProperties.TableWidth = new()
+                {
+                    Type = TableWidthUnitValues.Dxa,
+                    Width = width.ValueInDxa.ToString(CultureInfo.InvariantCulture)
+                };
                 break;
         }
 
@@ -206,27 +212,32 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
 
         var dir = tableNode.GetTextDirection();
         if (dir.HasValue)
-            tableProperties.BiDiVisual = new() { 
-                Val = dir == AngleSharp.Dom.DirectionMode.Rtl? OnOffOnlyValues.On : OnOffOnlyValues.Off
+            tableProperties.BiDiVisual = new()
+            {
+                Val = dir == AngleSharp.Dom.DirectionMode.Rtl ? OnOffOnlyValues.On : OnOffOnlyValues.Off
             };
 
         var spacing = Convert.ToInt16(tableNode.GetAttribute("cellspacing"));
         if (spacing > 0)
-            tableProperties.TableCellSpacing = new() {
-                Type = TableWidthUnitValues.Dxa, 
+            tableProperties.TableCellSpacing = new()
+            {
+                Type = TableWidthUnitValues.Dxa,
                 Width = new Unit(UnitMetric.Pixel, spacing).ValueInDxa.ToString(CultureInfo.InvariantCulture)
-        };
+            };
 
         var padding = Convert.ToInt16(tableNode.GetAttribute("cellpadding"));
         if (padding > 0)
         {
-            int paddingDxa = (int) new Unit(UnitMetric.Pixel, padding).ValueInDxa;
+            int paddingDxa = (int)new Unit(UnitMetric.Pixel, padding).ValueInDxa;
 
-            TableCellMarginDefault cellMargin = new() {
-                TableCellLeftMargin = new() { Type = TableWidthValues.Dxa, Width = (short) paddingDxa },
-                TableCellRightMargin = new() { Type = TableWidthValues.Dxa, Width = (short) paddingDxa },
-                TopMargin = new() { Type = TableWidthUnitValues.Dxa, Width = paddingDxa.ToString(CultureInfo.InvariantCulture) },
-                BottomMargin = new() { Type = TableWidthUnitValues.Dxa, Width = paddingDxa.ToString(CultureInfo.InvariantCulture) }
+            TableCellMarginDefault cellMargin = new()
+            {
+                TableCellLeftMargin = new() { Type = TableWidthValues.Dxa, Width = (short)paddingDxa },
+                TableCellRightMargin = new() { Type = TableWidthValues.Dxa, Width = (short)paddingDxa },
+                TopMargin = new()
+                    { Type = TableWidthUnitValues.Dxa, Width = paddingDxa.ToString(CultureInfo.InvariantCulture) },
+                BottomMargin = new()
+                    { Type = TableWidthUnitValues.Dxa, Width = paddingDxa.ToString(CultureInfo.InvariantCulture) }
             };
             tableProperties.TableCellMarginDefault = cellMargin;
         }
@@ -235,7 +246,8 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
 
         if (!styleBorder.IsEmpty)
         {
-            var tableBorders = new TableBorders {
+            var tableBorders = new TableBorders
+            {
                 TopBorder = Converter.ToBorder<TopBorder>(styleBorder.Top),
                 LeftBorder = Converter.ToBorder<LeftBorder>(styleBorder.Left),
                 RightBorder = Converter.ToBorder<RightBorder>(styleBorder.Right),
@@ -247,7 +259,8 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
         // is the border=0? If so, we remove the border regardless the style in use
         else if (tableNode.Border == 0)
         {
-            tableProperties.TableBorders = new TableBorders() {
+            tableProperties.TableBorders = new TableBorders()
+            {
                 TopBorder = new TopBorder { Val = BorderValues.None },
                 LeftBorder = new LeftBorder { Val = BorderValues.None },
                 RightBorder = new RightBorder { Val = BorderValues.None },
@@ -271,8 +284,9 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
             // its grid lines. Otherwise the default table style hides the grid lines.
             if (handleBorders)
             {
-                uint borderSize = (uint) new Unit(UnitMetric.Pixel, tableNode.Border).ValueInDxa;
-                tableProperties.TableBorders = new TableBorders() {
+                uint borderSize = (uint)new Unit(UnitMetric.Pixel, tableNode.Border).ValueInDxa;
+                tableProperties.TableBorders = new TableBorders()
+                {
                     TopBorder = new TopBorder { Val = BorderValues.None },
                     LeftBorder = new LeftBorder { Val = BorderValues.None },
                     RightBorder = new RightBorder { Val = BorderValues.None },

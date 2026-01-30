@@ -49,10 +49,12 @@ sealed class FigureCaptionExpression(IHtmlElement node) : PhrasingElementExpress
 
         if (childElements.First() is Run run) // any caption?
         {
-            Text? t = run.GetFirstChild<Text>();
+            var t = run.GetFirstChild<Text>();
             if (t != null)
                 t.Text = " " + t.InnerText; // append a space after the numero of the picture
         }
+        
+        p.Append(childElements);
 
         return [p];
     }

@@ -1,14 +1,15 @@
 /* Copyright (C) Olivier Nizet https://github.com/onizet/html2openxml - All Rights Reserved
- * 
+ *
  * This source is subject to the Microsoft Permissive License.
  * Please see the License.txt file for more information.
  * All other rights reserved.
- * 
- * THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY 
+ *
+ * THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
  * KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
  * PARTICULAR PURPOSE.
  */
+
 using System;
 using System.Collections.Generic;
 using AngleSharp.Dom;
@@ -59,6 +60,7 @@ abstract class HtmlDomExpression
             { TagNames.Ins, el => new PhrasingElementExpression((IHtmlElement) el, new Underline() { Val = UnderlineValues.Single }) },
             { TagNames.Ol, el => new ListExpression((IHtmlElement) el) },
             { TagNames.Pre, el => new PreElementExpression((IHtmlElement) el) },
+            { TagNames.Code, el => new CodeElementExpression((IHtmlElement) el) },
             { TagNames.Q, el => new QuoteElementExpression((IHtmlElement) el) },
             { TagNames.Quote, el => new QuoteElementExpression((IHtmlElement) el) },
             { TagNames.Span, el => new PhrasingElementExpression((IHtmlElement) el) },
@@ -81,24 +83,24 @@ abstract class HtmlDomExpression
     /// Process the interpretation of the Html node to its Word OpenXml equivalence.
     /// </summary>
     /// <param name="context">The parsing context.</param>
-    public abstract IEnumerable<OpenXmlElement> Interpret (ParsingContext context);
+    public abstract IEnumerable<OpenXmlElement> Interpret(ParsingContext context);
 
 
     /// <summary>
     /// Create a new interpreter for the given html tag.
     /// </summary>
-    public static HtmlDomExpression? CreateFromHtmlNode (INode node)
+    public static HtmlDomExpression? CreateFromHtmlNode(INode node)
     {
         if (node.NodeType == NodeType.Text)
             return new TextExpression(node);
         else if (node.NodeType == NodeType.Element
-            && !ignoreTags.Contains(node.NodeName))
+                 && !ignoreTags.Contains(node.NodeName))
         {
             if (knownTags.TryGetValue(node.NodeName, out Func<IElement, HtmlDomExpression>? handler))
-                return handler((IElement) node);
+                return handler((IElement)node);
 
             // fallback on the flow element which will cover all the semantic Html5 tags
-            return new BlockElementExpression((IHtmlElement) node);
+            return new BlockElementExpression((IHtmlElement)node);
         }
 
         return null;

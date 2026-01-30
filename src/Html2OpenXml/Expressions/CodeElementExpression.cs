@@ -20,6 +20,7 @@ sealed class CodeElementExpression(IHtmlElement node) : BlockElementExpression(n
         Table preTable = new(
             new TableProperties {
                 TableStyle = context.DocumentStyle.GetTableStyle(context.DocumentStyle.DefaultStyles.PreTableStyle),
+                TableDescription = new TableDescription(){Val = "CODE_BLOCK"},
                 TableWidth = new() { Type = TableWidthUnitValues.Auto, Width = "0" } // 100%
             },
             new TableGrid(

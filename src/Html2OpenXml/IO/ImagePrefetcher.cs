@@ -106,36 +106,46 @@ sealed class ImagePrefetcher<T> : IImageLoader
 
         Resource? response;
 
-        response = await resourceLoader.FetchAsync(imageUri, cancellationToken).ConfigureAwait(false);
-        if (response?.Content == null)
-            return null;
-
-        using (response)
+        try
         {
-            // For requested url with no filename, we need to read the media mime type if provided
-            response.Headers.TryGetValue("Content-Type", out var mime);
-            if (!TryInspectMimeType(mime, out PartTypeInfo type)
-                && !TryGuessTypeFromUri(imageUri, out type)
-                && !TryGuessTypeFromStream(response.Content, out type))
-            {
+            response = await resourceLoader.FetchAsync(imageUri, cancellationToken).ConfigureAwait(false);
+            if (response?.Content == null)
                 return null;
-            }
 
-            var ipart = hostingPart.AddImagePart(type);
-            Size originalSize;
-            using (var outputStream = ipart.GetStream(FileMode.Create))
+            using (response)
             {
-                response.Content.CopyTo(outputStream);
+                // For requested url with no filename, we need to read the media mime type if provided
+                response.Headers.TryGetValue("Content-Type", out var mime);
+                if (!TryInspectMimeType(mime, out PartTypeInfo type)
+                    && !TryGuessTypeFromUri(imageUri, out type)
+                    && !TryGuessTypeFromStream(response.Content, out type))
+                {
+                    return null;
+                }
 
-                outputStream.Seek(0L, SeekOrigin.Begin);
-                originalSize = GetImageSize(outputStream);
+                var ipart = hostingPart.AddImagePart(type);
+                Size originalSize;
+                using (var outputStream = ipart.GetStream(FileMode.Create))
+                {
+                    response.Content.CopyTo(outputStream);
+
+                    outputStream.Seek(0L, SeekOrigin.Begin);
+                    originalSize = GetImageSize(outputStream);
+                }
+
+                return new HtmlImageInfo(src, hostingPart.GetIdOfPart(ipart))
+                {
+                    TypeInfo = type,
+                    Size = originalSize
+                };
             }
-
-            return new HtmlImageInfo(src, hostingPart.GetIdOfPart(ipart)) {
-                TypeInfo = type,
-                Size = originalSize
-            };
         }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error while fetching image {src}: {e.Message}");
+        }
+
+        return null;
     }
 
     /// <summary>
