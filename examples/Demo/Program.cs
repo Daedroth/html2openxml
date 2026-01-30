@@ -24,14 +24,14 @@ namespace Demo
                 // instead of creating it from scratch.
                 using (var buffer = ResourceHelper.GetStream("Resources.template.docx"))
                 {
-                    buffer.CopyTo(generatedDocument);
+                    await buffer.CopyToAsync(generatedDocument);
                 }
 
                 generatedDocument.Position = 0L;
                 //using (WordprocessingDocument package = WordprocessingDocument.Open(generatedDocument, true))
                 using (WordprocessingDocument package = WordprocessingDocument.Create(generatedDocument, WordprocessingDocumentType.Document))
                 {
-                    MainDocumentPart mainPart = package.MainDocumentPart;
+                    MainDocumentPart? mainPart = package.MainDocumentPart;
                     if (mainPart == null)
                     {
                         mainPart = package.AddMainDocumentPart();
@@ -47,7 +47,7 @@ namespace Demo
                     AssertThatOpenXmlDocumentIsValid(package);
                 }
 
-                File.WriteAllBytes(filename, generatedDocument.ToArray());
+                await File.WriteAllBytesAsync(filename, generatedDocument.ToArray());
             }
 
             Process.Start(new ProcessStartInfo(filename) { UseShellExecute = true });
@@ -67,7 +67,7 @@ namespace Demo
             Console.ForegroundColor = ConsoleColor.Gray;
             foreach (ValidationErrorInfo error in errors)
             {
-                Console.Write("{0}\n\t{1}", error.Path.XPath, error.Description);
+                Console.Write("{0}\n\t{1}", error.Path!.XPath, error.Description);
                 Console.WriteLine();
             }
 

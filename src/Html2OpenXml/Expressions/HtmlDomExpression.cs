@@ -9,9 +9,6 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
  * PARTICULAR PURPOSE.
  */
-
-using System;
-using System.Collections.Generic;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using DocumentFormat.OpenXml;
@@ -24,7 +21,6 @@ namespace HtmlToOpenXml.Expressions;
 /// </summary>
 abstract class HtmlDomExpression
 {
-    protected const string InternalNamespaceUri = "https://github.com/onizet/html2openxml";
     static readonly Dictionary<string, Func<IElement, HtmlDomExpression>> knownTags = InitKnownTags();
     static readonly HashSet<string> ignoreTags = new(StringComparer.OrdinalIgnoreCase) {
         TagNames.Xml, TagNames.AnnotationXml, TagNames.Button, TagNames.Progress,
@@ -39,9 +35,11 @@ abstract class HtmlDomExpression
             { TagNames.Abbr, el => new AbbreviationExpression((IHtmlElement) el) },
             { "acronym", el => new AbbreviationExpression((IHtmlElement) el) },
             { TagNames.B, el => new PhrasingElementExpression((IHtmlElement) el, new Bold()) },
+            { TagNames.Big, el => new PhrasingElementExpression((IHtmlElement) el, new FontSize() {  Val = "36" }) },
             { TagNames.BlockQuote, el => new BlockQuoteExpression((IHtmlElement) el) },
             { TagNames.Br, _ => new LineBreakExpression() },
             { TagNames.Cite, el => new CiteElementExpression((IHtmlElement) el) },
+            { TagNames.Code, el => new PhrasingElementExpression((IHtmlElement) el) },
             { TagNames.Dd, el => new BlockElementExpression((IHtmlElement) el, new Indentation() { FirstLine = "708" }, new SpacingBetweenLines() { After = "0" }) },
             { TagNames.Del, el => new PhrasingElementExpression((IHtmlElement) el, new Strike()) },
             { TagNames.Dfn, el => new AbbreviationExpression((IHtmlElement) el) },
@@ -58,11 +56,19 @@ abstract class HtmlDomExpression
             { TagNames.Hr, el => new HorizontalLineExpression((IHtmlElement) el) },
             { TagNames.Img, el => new ImageExpression((IHtmlImageElement) el) },
             { TagNames.Ins, el => new PhrasingElementExpression((IHtmlElement) el, new Underline() { Val = UnderlineValues.Single }) },
+            { TagNames.Kbd, el => new PhrasingElementExpression((IHtmlElement) el) },
+            { TagNames.Mark, el => new PhrasingElementExpression((IHtmlElement) el, new Shading { Val = ShadingPatternValues.Clear, Fill = "FFFF00" /* yellow */ }) },
+            { TagNames.NoBr, el => new PhrasingElementExpression((IHtmlElement) el) },
             { TagNames.Ol, el => new ListExpression((IHtmlElement) el) },
             { TagNames.Pre, el => new PreElementExpression((IHtmlElement) el) },
             { TagNames.Code, el => new CodeElementExpression((IHtmlElement) el) },
             { TagNames.Q, el => new QuoteElementExpression((IHtmlElement) el) },
             { TagNames.Quote, el => new QuoteElementExpression((IHtmlElement) el) },
+            { TagNames.Rb, el => new PhrasingElementExpression((IHtmlElement) el) },
+            { TagNames.Rt, el => new PhrasingElementExpression((IHtmlElement) el) },
+            { TagNames.Ruby, el => new BlockElementExpression((IHtmlElement) el) },
+            { TagNames.Samp, el => new PhrasingElementExpression((IHtmlElement) el) },
+            { TagNames.Small, el => new PhrasingElementExpression((IHtmlElement) el, new FontSize() { Val = "20" }) },
             { TagNames.Span, el => new PhrasingElementExpression((IHtmlElement) el) },
             { TagNames.S, el => new PhrasingElementExpression((IHtmlElement) el, new Strike()) },
             { TagNames.Strike, el => new PhrasingElementExpression((IHtmlElement) el, new Strike()) },
@@ -72,8 +78,10 @@ abstract class HtmlDomExpression
             { TagNames.Svg, el => new SvgExpression((AngleSharp.Svg.Dom.ISvgSvgElement) el) },
             { TagNames.Table, el => new TableExpression((IHtmlTableElement) el) },
             { TagNames.Time, el => new PhrasingElementExpression((IHtmlElement) el) },
+            { TagNames.Tt, el => new PhrasingElementExpression((IHtmlElement) el) },
             { TagNames.U, el => new PhrasingElementExpression((IHtmlElement) el, new Underline() { Val = UnderlineValues.Single }) },
             { TagNames.Ul, el => new ListExpression((IHtmlElement) el) },
+            { TagNames.Var, el => new PhrasingElementExpression((IHtmlElement) el) }
         };
 
         return knownTags;
@@ -83,8 +91,7 @@ abstract class HtmlDomExpression
     /// Process the interpretation of the Html node to its Word OpenXml equivalence.
     /// </summary>
     /// <param name="context">The parsing context.</param>
-    public abstract IEnumerable<OpenXmlElement> Interpret(ParsingContext context);
-
+    public abstract IEnumerable<OpenXmlElement> Interpret (ParsingContext context);
 
     /// <summary>
     /// Create a new interpreter for the given html tag.

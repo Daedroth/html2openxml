@@ -9,11 +9,7 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
  * PARTICULAR PURPOSE.
  */
-
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using AngleSharp.Html.Dom;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -158,7 +154,7 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
                 }
             }
 
-            if (rows.Any())
+            if (rows.Length > 0)
                 columnCount = Math.Max(rows.Max(), columnCount);
         }
 
@@ -172,10 +168,10 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
 
         styleAttributes = tableNode.GetStyles();
         var width = styleAttributes.GetUnit("width", UnitMetric.Pixel);
-        if (!width.IsValid) width = Unit.Parse(tableNode.GetAttribute("width"), UnitMetric.Pixel);
+        if (!width.IsValid) width = Unit.Parse(tableNode.GetAttribute("width").AsSpan(), UnitMetric.Pixel);
         if (!width.IsValid) width = new Unit(UnitMetric.Percent, 100);
 
-        switch (width.Type)
+        switch (width.Metric)
         {
             case UnitMetric.Percent:
                 tableProperties.TableWidth = new TableWidth
@@ -186,11 +182,11 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
                 break;
             case UnitMetric.Point:
             case UnitMetric.Pixel:
-                tableProperties.TableWidth = new()
-                {
-                    Type = TableWidthUnitValues.Dxa,
-                    Width = width.ValueInDxa.ToString(CultureInfo.InvariantCulture)
-                };
+                tableProperties.TableWidth = new() { Type = TableWidthUnitValues.Dxa, 
+                    Width = width.ValueInDxa.ToString(CultureInfo.InvariantCulture) };
+                break;
+            case UnitMetric.Auto:
+                tableProperties.TableWidth = new() { Width = "0", Type = TableWidthUnitValues.Auto };
                 break;
         }
 
@@ -203,12 +199,6 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
                 break;
             }
         }
-
-        var align = Converter.ToParagraphAlign(tableNode.GetAttribute("align"));
-        if (!align.HasValue)
-            align = Converter.ToParagraphAlign(styleAttributes["justify-self"]);
-        if (align.HasValue)
-            tableProperties.TableJustification = new() { Val = align.Value.ToTableRowAlignment() };
 
         var dir = tableNode.GetTextDirection();
         if (dir.HasValue)
@@ -257,7 +247,8 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
             tableProperties.TableBorders = tableBorders;
         }
         // is the border=0? If so, we remove the border regardless the style in use
-        else if (tableNode.Border == 0)
+        // but only remove border if the html style border was set, otherwise leave the border style as-is.
+        else if (!styleBorder.IsEmpty && tableNode.Border == 0)
         {
             tableProperties.TableBorders = new TableBorders()
             {
@@ -296,5 +287,22 @@ sealed class TableExpression(IHtmlTableElement node) : PhrasingElementExpression
                 };
             }
         }
+
+        var align = Converter.ToParagraphAlign(tableNode.GetAttribute("align").AsSpan())
+            ?? Converter.ToParagraphAlign(styleAttributes["justify-self"]);
+        if (!align.HasValue)
+        {
+            var margin = styleAttributes.GetMargin("margin");
+            if (margin.Left.Metric == UnitMetric.Auto)
+            {
+                if (margin.Right.Metric == UnitMetric.Auto)
+                    align = JustificationValues.Center;
+                else
+                    align = JustificationValues.Right;
+            }
+        }
+
+        if (align.HasValue)
+            tableProperties.TableJustification = new() { Val = align.Value.ToTableRowAlignment() };
     }
 }

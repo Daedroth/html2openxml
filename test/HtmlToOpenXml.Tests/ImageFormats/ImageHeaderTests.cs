@@ -42,11 +42,11 @@ namespace HtmlToOpenXml.Tests.ImageFormats
             using (var imageStream = ResourceHelper.GetStream("Resources.lumileds.png"))
             {
                 Size size = ImageHeader.GetDimensions(imageStream);
-                Assert.Multiple(() =>
+                using (Assert.EnterMultipleScope())
                 {
                     Assert.That(size.Width, Is.EqualTo(500));
                     Assert.That(size.Height, Is.EqualTo(500));
-                });
+                }
             }
         }
 
@@ -61,6 +61,16 @@ namespace HtmlToOpenXml.Tests.ImageFormats
             bool success = ImageHeader.TryDetectFileType(imageStream, out var guessType);
 
             Assert.That(success, Is.EqualTo(true));
+            return guessType;
+        }
+
+        [Test(ExpectedResult = ImageHeader.FileType.Unrecognized)]
+        public ImageHeader.FileType GuessFormat_WithEmpty_ReturnsFileType()
+        {
+            using var memoryStream = new MemoryStream();
+            bool success = ImageHeader.TryDetectFileType(memoryStream, out var guessType);
+
+            Assert.That(success, Is.EqualTo(false));
             return guessType;
         }
     }

@@ -9,12 +9,8 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
  * PARTICULAR PURPOSE.
  */
-using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace HtmlToOpenXml.IO;
@@ -126,7 +122,13 @@ public class DefaultWebRequest : IWebRequest
             resource.StatusCode = response.StatusCode;
 
             if (response.IsSuccessStatusCode)
+            {
                 resource.Content = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                if (response.Content.Headers.TryGetValues("Content-Type", out var mime))
+                {
+                    resource.Headers.Add("Content-Type", string.Join(", ", mime));
+                }
+            }
 
             foreach (var header in response.Headers)
                 resource.Headers.Add(header.Key, string.Join(", ", header.Value));
