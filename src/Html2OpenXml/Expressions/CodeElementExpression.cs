@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using AngleSharp.Html.Dom;
+﻿using AngleSharp.Html.Dom;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 

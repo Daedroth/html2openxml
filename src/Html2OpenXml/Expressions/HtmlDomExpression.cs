@@ -39,7 +39,7 @@ abstract class HtmlDomExpression
             { TagNames.BlockQuote, el => new BlockQuoteExpression((IHtmlElement) el) },
             { TagNames.Br, _ => new LineBreakExpression() },
             { TagNames.Cite, el => new CiteElementExpression((IHtmlElement) el) },
-            { TagNames.Code, el => new PhrasingElementExpression((IHtmlElement) el) },
+            { TagNames.Code, el => new CodeElementExpression((IHtmlElement) el) },
             { TagNames.Dd, el => new BlockElementExpression((IHtmlElement) el, new Indentation() { FirstLine = "708" }, new SpacingBetweenLines() { After = "0" }) },
             { TagNames.Del, el => new PhrasingElementExpression((IHtmlElement) el, new Strike()) },
             { TagNames.Dfn, el => new AbbreviationExpression((IHtmlElement) el) },
